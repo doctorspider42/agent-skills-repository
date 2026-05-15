@@ -11,6 +11,8 @@ export interface ResolvedConfig {
   defaultScope: InstallScope;
   globalSkillsPath: string;
   projectSkillsPath: string;
+  globalAgentsPath: string;
+  projectAgentsPath: string;
   requestTimeoutMs: number;
 }
 
@@ -20,6 +22,8 @@ export function readConfig(): ResolvedConfig {
   const defaultScope = (c.get<InstallScope>('defaultScope') ?? 'project');
   const globalPathSetting = (c.get<string>('globalSkillsPath') ?? '').trim();
   const projectPathSetting = (c.get<string>('projectSkillsPath') ?? '.github/skills').trim();
+  const globalAgentsSetting = (c.get<string>('globalAgentsPath') ?? '').trim();
+  const projectAgentsSetting = (c.get<string>('projectAgentsPath') ?? '.github/agents').trim();
   const requestTimeoutMs = c.get<number>('requestTimeoutMs') ?? 30000;
 
   return {
@@ -27,6 +31,8 @@ export function readConfig(): ResolvedConfig {
     defaultScope,
     globalSkillsPath: globalPathSetting || path.join(os.homedir(), '.claude', 'skills'),
     projectSkillsPath: projectPathSetting || '.github/skills',
+    globalAgentsPath: globalAgentsSetting || path.join(os.homedir(), '.claude', 'agents'),
+    projectAgentsPath: projectAgentsSetting || '.github/agents',
     requestTimeoutMs
   };
 }
@@ -62,4 +68,17 @@ export function resolveScopePath(
   return path.isAbsolute(cfg.projectSkillsPath)
     ? cfg.projectSkillsPath
     : path.join(folder.uri.fsPath, cfg.projectSkillsPath);
+}
+
+export function resolveAgentsScopePath(
+  scope: InstallScope,
+  cfg: ResolvedConfig
+): string | undefined {
+  if (scope === 'global') return cfg.globalAgentsPath;
+
+  const folder = vscode.workspace.workspaceFolders?.[0];
+  if (!folder) return undefined;
+  return path.isAbsolute(cfg.projectAgentsPath)
+    ? cfg.projectAgentsPath
+    : path.join(folder.uri.fsPath, cfg.projectAgentsPath);
 }

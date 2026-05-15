@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
-import { SkillDetail, SkillSummary } from '../types';
+import { AgentDetail, AgentSummary, SkillDetail, SkillSummary } from '../types';
 
 export class ApiError extends Error {
   constructor(message: string, public status?: number, public code?: string) {
@@ -82,6 +82,56 @@ export class SkillsApiClient {
       return Buffer.from(res.data).toString('utf8');
     } catch (err) {
       throw toApiError(err, `Failed to fetch ${relativePath} for skill ${id}`);
+    }
+  }
+
+  async listAgents(refresh = false): Promise<AgentSummary[]> {
+    try {
+      const res = await this.http.get<{ agents: AgentSummary[] }>('/agents', {
+        params: refresh ? { refresh: 1 } : undefined
+      });
+      if (!res.data || !Array.isArray(res.data.agents)) {
+        throw new ApiError(
+          `Unexpected response from /agents (no 'agents' array). Got: ${truncate(JSON.stringify(res.data))}`
+        );
+      }
+      return res.data.agents;
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw toApiError(err, 'Failed to list agents');
+    }
+  }
+
+  async getAgent(id: string): Promise<AgentDetail> {
+    try {
+      const res = await this.http.get<AgentDetail>(`/agents/${encodeSkillIdPath(id)}`);
+      return res.data;
+    } catch (err) {
+      throw toApiError(err, `Failed to fetch agent ${id}`);
+    }
+  }
+
+  async downloadAgentZip(id: string): Promise<Buffer> {
+    try {
+      const res = await this.http.get<ArrayBuffer>(
+        `/agents/${encodeSkillIdPath(id)}/download`,
+        { responseType: 'arraybuffer' }
+      );
+      return Buffer.from(res.data);
+    } catch (err) {
+      throw toApiError(err, `Failed to download agent ${id}`);
+    }
+  }
+
+  async getAgentFileText(id: string, relativePath: string): Promise<string> {
+    try {
+      const res = await this.http.get<ArrayBuffer>(
+        `/agents/${encodeSkillIdPath(id)}/files/${encodeSkillIdPath(relativePath)}`,
+        { responseType: 'arraybuffer' }
+      );
+      return Buffer.from(res.data).toString('utf8');
+    } catch (err) {
+      throw toApiError(err, `Failed to fetch ${relativePath} for agent ${id}`);
     }
   }
 }

@@ -42,3 +42,32 @@ export interface InstalledSkill {
 }
 
 export type SkillStatus = 'notInstalled' | 'installed' | 'updateAvailable';
+
+export type AgentMetadata = SkillMetadata;
+export type AgentFileEntry = SkillFileEntry;
+
+export interface AgentSummary {
+  id: string;
+  category: string[];
+  directoryName: string;
+  metadata: AgentMetadata;
+  hasMetadataFile: boolean;
+  metadataError?: string;
+}
+
+export interface AgentDetail extends AgentSummary {
+  files: AgentFileEntry[];
+}
+
+export interface InstalledAgent {
+  id: string;
+  name: string;
+  installedVersion: string;
+  source: string;
+  installedAt: string;
+  files: string[];
+  scope: InstallScope;
+  installPath: string;
+}
+
+export type AgentStatus = SkillStatus;

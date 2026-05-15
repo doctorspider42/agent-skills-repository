@@ -2,7 +2,7 @@
   "name": "agent-skills-repository",
   "displayName": "Agent Skills Repository",
   "description": "Browse, install and update Agent skills from your private repository.",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "publisher": "doctorspider",
   "license": "MIT",
     "repository": {
@@ -16,9 +16,11 @@
   "categories": ["Other"],
   "activationEvents": [
     "onView:agentSkillsExplorer",
+    "onView:agentSkillsAgentsExplorer",
     "onCommand:agentSkills.testConnection",
     "onCommand:agentSkills.openSettings",
-    "onCommand:agentSkills.preview"
+    "onCommand:agentSkills.preview",
+    "onCommand:agentSkills.agents.preview"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -47,6 +49,18 @@
           "type": "string",
           "default": ".github/skills",
           "description": "Path inside the workspace used for the 'project' scope.",
+          "scope": "resource"
+        },
+        "agentSkills.globalAgentsPath": {
+          "type": "string",
+          "default": "",
+          "description": "Absolute path used for the 'global' scope when installing agents. Empty = ${HOME}/.claude/agents.",
+          "scope": "machine"
+        },
+        "agentSkills.projectAgentsPath": {
+          "type": "string",
+          "default": ".github/agents",
+          "description": "Path inside the workspace used for the 'project' scope when installing agents.",
           "scope": "resource"
         },
         "agentSkills.requestTimeoutMs": {
@@ -103,6 +117,30 @@
       {
         "command": "agentSkills.openSkillFolder",
         "title": "Reveal in Explorer"
+      },
+      {
+        "command": "agentSkills.agents.preview",
+        "title": "Agent Skills: Preview Agent",
+        "icon": "$(preview)"
+      },
+      {
+        "command": "agentSkills.agents.install",
+        "title": "Install Agent",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "agentSkills.agents.uninstall",
+        "title": "Uninstall Agent",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "agentSkills.agents.update",
+        "title": "Update Agent",
+        "icon": "$(sync)"
+      },
+      {
+        "command": "agentSkills.agents.openFolder",
+        "title": "Reveal in Explorer"
       }
     ],
     "viewsContainers": {
@@ -119,6 +157,12 @@
         {
           "id": "agentSkillsExplorer",
           "name": "Skills",
+          "icon": "resources/skills.svg",
+          "contextualTitle": "Agent Skills Repository"
+        },
+        {
+          "id": "agentSkillsAgentsExplorer",
+          "name": "Agents",
           "icon": "resources/skills.svg",
           "contextualTitle": "Agent Skills Repository"
         }
@@ -139,6 +183,21 @@
         {
           "command": "agentSkills.openSettings",
           "when": "view == agentSkillsExplorer",
+          "group": "navigation@3"
+        },
+        {
+          "command": "agentSkills.refresh",
+          "when": "view == agentSkillsAgentsExplorer",
+          "group": "navigation@1"
+        },
+        {
+          "command": "agentSkills.testConnection",
+          "when": "view == agentSkillsAgentsExplorer",
+          "group": "navigation@2"
+        },
+        {
+          "command": "agentSkills.openSettings",
+          "when": "view == agentSkillsAgentsExplorer",
           "group": "navigation@3"
         }
       ],
@@ -166,6 +225,31 @@
         {
           "command": "agentSkills.openSkillFolder",
           "when": "view == agentSkillsExplorer && viewItem =~ /^skill\\.(installed|updateAvailable)$/",
+          "group": "1_navigation"
+        },
+        {
+          "command": "agentSkills.agents.preview",
+          "when": "view == agentSkillsAgentsExplorer && viewItem == agent.notInstalled",
+          "group": "inline@0"
+        },
+        {
+          "command": "agentSkills.agents.install",
+          "when": "view == agentSkillsAgentsExplorer && viewItem == agent.notInstalled",
+          "group": "inline@1"
+        },
+        {
+          "command": "agentSkills.agents.update",
+          "when": "view == agentSkillsAgentsExplorer && viewItem == agent.updateAvailable",
+          "group": "inline"
+        },
+        {
+          "command": "agentSkills.agents.uninstall",
+          "when": "view == agentSkillsAgentsExplorer && viewItem =~ /^agent\\.(installed|updateAvailable)$/",
+          "group": "inline"
+        },
+        {
+          "command": "agentSkills.agents.openFolder",
+          "when": "view == agentSkillsAgentsExplorer && viewItem =~ /^agent\\.(installed|updateAvailable)$/",
           "group": "1_navigation"
         }
       ]

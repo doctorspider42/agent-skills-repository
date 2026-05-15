@@ -66,8 +66,8 @@ function parseConnectionString(cs: string): ParsedConnectionString {
   return { account, accountKey, blobEndpoint };
 }
 
-function buildContainerClient(): ContainerClient {
-  const { connectionString, account, accountKey, container, apiVersion } = config.azure;
+function buildContainerClient(container: string): ContainerClient {
+  const { connectionString, account, accountKey, apiVersion } = config.azure;
 
   // Fast path: no version pinning needed and the SDK already handles connection
   // strings — let it do the work.
@@ -97,7 +97,8 @@ function buildContainerClient(): ContainerClient {
   return new BlobServiceClient(url, pipeline).getContainerClient(container);
 }
 
-export const containerClient = buildContainerClient();
+export const containerClient = buildContainerClient(config.azure.container);
+export const agentsContainerClient = buildContainerClient(config.azure.agentsContainer);
 
 export interface BlobEntry {
   name: string;
@@ -106,9 +107,12 @@ export interface BlobEntry {
   lastModified?: Date;
 }
 
-export async function listAllBlobs(prefix?: string): Promise<BlobEntry[]> {
+export async function listAllBlobs(
+  prefix?: string,
+  container: ContainerClient = containerClient
+): Promise<BlobEntry[]> {
   const entries: BlobEntry[] = [];
-  for await (const blob of containerClient.listBlobsFlat({ prefix })) {
+  for await (const blob of container.listBlobsFlat({ prefix })) {
     entries.push({
       name: blob.name,
       size: blob.properties.contentLength ?? 0,
@@ -119,15 +123,24 @@ export async function listAllBlobs(prefix?: string): Promise<BlobEntry[]> {
   return entries;
 }
 
-export async function downloadBlobToBuffer(blobName: string): Promise<Buffer> {
-  const blob = containerClient.getBlobClient(blobName);
+export async function downloadBlobToBuffer(
+  blobName: string,
+  container: ContainerClient = containerClient
+): Promise<Buffer> {
+  const blob = container.getBlobClient(blobName);
   return blob.downloadToBuffer();
 }
 
-export function getBlobStream(blobName: string) {
-  return containerClient.getBlobClient(blobName).download();
+export function getBlobStream(
+  blobName: string,
+  container: ContainerClient = containerClient
+) {
+  return container.getBlobClient(blobName).download();
 }
 
-export async function blobExists(blobName: string): Promise<boolean> {
-  return containerClient.getBlobClient(blobName).exists();
+export async function blobExists(
+  blobName: string,
+  container: ContainerClient = containerClient
+): Promise<boolean> {
+  return container.getBlobClient(blobName).exists();
 }

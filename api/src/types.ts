@@ -28,4 +28,20 @@ export interface SkillDetail extends SkillSummary {
   files: SkillFileEntry[];
 }
 
+export type AgentMetadata = SkillMetadata;
+export type AgentFileEntry = SkillFileEntry;
+
+export interface AgentSummary {
+  id: string;
+  category: string[];
+  directoryName: string;
+  metadata: AgentMetadata;
+  hasMetadataFile: boolean;
+  metadataError?: string;
+}
+
+export interface AgentDetail extends AgentSummary {
+  files: AgentFileEntry[];
+}
+
 export const UNKNOWN = 'unknown';

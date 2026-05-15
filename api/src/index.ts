@@ -4,6 +4,7 @@ import cors from 'cors';
 import { config } from './config';
 import { authRouter } from './routes/auth';
 import { skillsRouter } from './routes/skills';
+import { agentsRouter } from './routes/agents';
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.get('/health', (_req, res) => {
 
 app.use('/auth', authRouter);
 app.use('/skills', skillsRouter);
+app.use('/agents', agentsRouter);
 
 app.use((req, res) => {
   res.status(404).json({ error: 'not_found', path: req.path });

@@ -11,6 +11,8 @@ interface InboundMessage {
     defaultScope?: InstallScope;
     projectSkillsPath?: string;
     globalSkillsPath?: string;
+    projectAgentsPath?: string;
+    globalAgentsPath?: string;
     source?: 'connection' | 'locations';
   };
 }
@@ -81,7 +83,9 @@ export class SettingsPanel {
         apiKeyPreview: apiKey ? `${'•'.repeat(Math.max(0, apiKey.length - 4))}${apiKey.slice(-4)}` : '',
         defaultScope: cfg.defaultScope,
         projectSkillsPath: cfg.projectSkillsPath,
-        globalSkillsPath: cfg.globalSkillsPath
+        globalSkillsPath: cfg.globalSkillsPath,
+        projectAgentsPath: cfg.projectAgentsPath,
+        globalAgentsPath: cfg.globalAgentsPath
       }
     });
   }
@@ -111,6 +115,12 @@ export class SettingsPanel {
         }
         if (typeof p.globalSkillsPath === 'string') {
           await config.update('globalSkillsPath', p.globalSkillsPath.trim(), target);
+        }
+        if (typeof p.projectAgentsPath === 'string') {
+          await config.update('projectAgentsPath', p.projectAgentsPath.trim(), target);
+        }
+        if (typeof p.globalAgentsPath === 'string') {
+          await config.update('globalAgentsPath', p.globalAgentsPath.trim(), target);
         }
         if (typeof p.apiKey === 'string' && p.apiKey.trim() !== '') {
           await setApiKey(this.context, p.apiKey.trim());
@@ -369,8 +379,20 @@ export class SettingsPanel {
 
   <div class="field">
     <label for="globalSkillsPath">Global skills path</label>
-    <input id="globalSkillsPath" type="text" placeholder="${defaultGlobalPlaceholder()}" autocomplete="off" />
+    <input id="globalSkillsPath" type="text" placeholder="${defaultGlobalSkillsPlaceholder()}" autocomplete="off" />
     <div class="hint">Absolute path. Leave empty to use <code>$HOME/.claude/skills</code>.</div>
+  </div>
+
+  <div class="field">
+    <label for="projectAgentsPath">Project agents path</label>
+    <input id="projectAgentsPath" type="text" placeholder=".github/agents" autocomplete="off" />
+    <div class="hint">Relative to the workspace root. Agent <code>.md</code> files are copied here.</div>
+  </div>
+
+  <div class="field">
+    <label for="globalAgentsPath">Global agents path</label>
+    <input id="globalAgentsPath" type="text" placeholder="${defaultGlobalAgentsPlaceholder()}" autocomplete="off" />
+    <div class="hint">Absolute path. Leave empty to use <code>$HOME/.claude/agents</code>.</div>
   </div>
 </div>
 
@@ -392,6 +414,8 @@ export class SettingsPanel {
     defaultScope: $('defaultScope'),
     projectSkillsPath: $('projectSkillsPath'),
     globalSkillsPath: $('globalSkillsPath'),
+    projectAgentsPath: $('projectAgentsPath'),
+    globalAgentsPath: $('globalAgentsPath'),
     openNative: $('openNative')
   };
 
@@ -425,7 +449,9 @@ export class SettingsPanel {
           source: 'locations',
           defaultScope: els.defaultScope.value,
           projectSkillsPath: els.projectSkillsPath.value,
-          globalSkillsPath: els.globalSkillsPath.value
+          globalSkillsPath: els.globalSkillsPath.value,
+          projectAgentsPath: els.projectAgentsPath.value,
+          globalAgentsPath: els.globalAgentsPath.value
         }
       });
     }, 500);
@@ -456,7 +482,9 @@ export class SettingsPanel {
         source: 'connection',
         defaultScope: els.defaultScope.value,
         projectSkillsPath: els.projectSkillsPath.value,
-        globalSkillsPath: els.globalSkillsPath.value
+        globalSkillsPath: els.globalSkillsPath.value,
+        projectAgentsPath: els.projectAgentsPath.value,
+        globalAgentsPath: els.globalAgentsPath.value
       }
     });
   });
@@ -468,6 +496,8 @@ export class SettingsPanel {
   els.defaultScope.addEventListener('change', scheduleLocationSave);
   els.projectSkillsPath.addEventListener('input', scheduleLocationSave);
   els.globalSkillsPath.addEventListener('input', scheduleLocationSave);
+  els.projectAgentsPath.addEventListener('input', scheduleLocationSave);
+  els.globalAgentsPath.addEventListener('input', scheduleLocationSave);
 
   window.addEventListener('message', (event) => {
     const msg = event.data;
@@ -478,6 +508,8 @@ export class SettingsPanel {
       els.defaultScope.value = p.defaultScope || 'project';
       els.projectSkillsPath.value = p.projectSkillsPath || '';
       els.globalSkillsPath.value = p.globalSkillsPath || '';
+      els.projectAgentsPath.value = p.projectAgentsPath || '';
+      els.globalAgentsPath.value = p.globalAgentsPath || '';
       els.apiKey.value = '';
       els.keyMeta.textContent = p.hasApiKey
         ? 'Stored key: ' + p.apiKeyPreview
@@ -504,9 +536,14 @@ export class SettingsPanel {
   }
 }
 
-function defaultGlobalPlaceholder(): string {
+function defaultGlobalSkillsPlaceholder(): string {
   if (process.platform === 'win32') return '%USERPROFILE%\\.claude\\skills';
   return '$HOME/.claude/skills';
+}
+
+function defaultGlobalAgentsPlaceholder(): string {
+  if (process.platform === 'win32') return '%USERPROFILE%\\.claude\\agents';
+  return '$HOME/.claude/agents';
 }
 
 function makeNonce(): string {

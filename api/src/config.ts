@@ -31,6 +31,7 @@ export const config = {
     account,
     accountKey,
     container: process.env.AZURE_STORAGE_CONTAINER?.trim() || 'skills',
+    agentsContainer: process.env.AZURE_STORAGE_AGENTS_CONTAINER?.trim() || 'agents',
     apiVersion: process.env.AZURE_STORAGE_API_VERSION?.trim() || ''
   },
   cacheTtlSeconds: Number(process.env.CATALOGUE_TTL_SECONDS ?? 60)
