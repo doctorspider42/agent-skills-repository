@@ -1,6 +1,6 @@
 {
   "name": "skills-api",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "REST API serving Claude Code skills from Azure Blob Storage",
   "main": "dist/src/index.js",
   "bin": {
