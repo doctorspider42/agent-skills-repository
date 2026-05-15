@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import express, { NextFunction, Request, Response } from 'express';
 import cors from 'cors';
 import { config } from './config';
