@@ -39,29 +39,29 @@
           "default": "project",
           "description": "Where new skills are installed when no scope is chosen interactively."
         },
-        "agentSkills.globalSkillsPath": {
-          "type": "string",
-          "default": "",
-          "description": "Absolute path used for the 'global' scope. Empty = ${HOME}/.claude/skills.",
-          "scope": "machine"
-        },
         "agentSkills.projectSkillsPath": {
           "type": "string",
           "default": ".github/skills",
-          "description": "Path inside the workspace used for the 'project' scope.",
+          "description": "Project (local) — path inside the workspace used for the 'project' scope when installing skills.",
           "scope": "resource"
-        },
-        "agentSkills.globalAgentsPath": {
-          "type": "string",
-          "default": "",
-          "description": "Absolute path used for the 'global' scope when installing agents. Empty = ${HOME}/.claude/agents.",
-          "scope": "machine"
         },
         "agentSkills.projectAgentsPath": {
           "type": "string",
           "default": ".github/agents",
-          "description": "Path inside the workspace used for the 'project' scope when installing agents.",
+          "description": "Project (local) — path inside the workspace used for the 'project' scope when installing agents.",
           "scope": "resource"
+        },
+        "agentSkills.globalSkillsPath": {
+          "type": "string",
+          "default": "",
+          "description": "Global — absolute path used for the 'global' scope when installing skills. Empty = ${HOME}/.claude/skills.",
+          "scope": "machine"
+        },
+        "agentSkills.globalAgentsPath": {
+          "type": "string",
+          "default": "",
+          "description": "Global — absolute path used for the 'global' scope when installing agents. Empty = ${HOME}/.claude/agents.",
+          "scope": "machine"
         },
         "agentSkills.requestTimeoutMs": {
           "type": "number",

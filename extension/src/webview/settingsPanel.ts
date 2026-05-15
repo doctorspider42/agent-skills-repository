@@ -206,6 +206,17 @@ export class SettingsPanel {
     color: var(--vscode-descriptionForeground);
     margin: 0 0 16px 0;
   }
+  .subsection {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--vscode-descriptionForeground);
+    margin: 18px 0 8px 0;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--vscode-panel-border, transparent);
+    font-weight: 600;
+  }
+  .subsection:first-of-type { margin-top: 4px; }
   .field { display: flex; flex-direction: column; margin-bottom: 14px; }
   .field label {
     font-weight: 600;
@@ -371,26 +382,30 @@ export class SettingsPanel {
     <div class="hint">Used when installing a skill without choosing a location interactively.</div>
   </div>
 
+  <h3 class="subsection">Project (local)</h3>
+
   <div class="field">
-    <label for="projectSkillsPath">Project skills path</label>
+    <label for="projectSkillsPath">Skills path</label>
     <input id="projectSkillsPath" type="text" placeholder=".github/skills" autocomplete="off" />
     <div class="hint">Relative to the workspace root.</div>
   </div>
 
   <div class="field">
-    <label for="globalSkillsPath">Global skills path</label>
+    <label for="projectAgentsPath">Agents path</label>
+    <input id="projectAgentsPath" type="text" placeholder=".github/agents" autocomplete="off" />
+    <div class="hint">Relative to the workspace root. Agent <code>.md</code> files are copied here.</div>
+  </div>
+
+  <h3 class="subsection">Global</h3>
+
+  <div class="field">
+    <label for="globalSkillsPath">Skills path</label>
     <input id="globalSkillsPath" type="text" placeholder="${defaultGlobalSkillsPlaceholder()}" autocomplete="off" />
     <div class="hint">Absolute path. Leave empty to use <code>$HOME/.claude/skills</code>.</div>
   </div>
 
   <div class="field">
-    <label for="projectAgentsPath">Project agents path</label>
-    <input id="projectAgentsPath" type="text" placeholder=".github/agents" autocomplete="off" />
-    <div class="hint">Relative to the workspace root. Agent <code>.md</code> files are copied here.</div>
-  </div>
-
-  <div class="field">
-    <label for="globalAgentsPath">Global agents path</label>
+    <label for="globalAgentsPath">Agents path</label>
     <input id="globalAgentsPath" type="text" placeholder="${defaultGlobalAgentsPlaceholder()}" autocomplete="off" />
     <div class="hint">Absolute path. Leave empty to use <code>$HOME/.claude/agents</code>.</div>
   </div>
