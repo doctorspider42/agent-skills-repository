@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { NextFunction, Router, Request, Response } from 'express';
 import { apiKeyAuth } from '../auth';
 import { blobPathFor, getCatalogue, toSummary } from '../skills/service';
 import { streamSkillZip } from '../skills/zip';
@@ -21,7 +21,14 @@ skillsRouter.get('/', async (req, res, next) => {
   }
 });
 
-skillsRouter.get('/:id', async (req, res, next) => {
+skillsRouter.get('/:id', skillDetailHandler);
+skillsRouter.get('/:id/download', skillDownloadHandler);
+skillsRouter.get('/*/download', skillDownloadHandler);
+skillsRouter.get('/:id/files/*', skillFileHandler);
+skillsRouter.get('/*/files/*', skillFileHandler);
+skillsRouter.get('/*', skillDetailHandler);
+
+async function skillDetailHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const id = decodeId(req);
     const catalogue = await getCatalogue();
@@ -34,9 +41,9 @@ skillsRouter.get('/:id', async (req, res, next) => {
   } catch (err) {
     next(err);
   }
-});
+}
 
-skillsRouter.get('/:id/download', async (req, res, next) => {
+async function skillDownloadHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const id = decodeId(req);
     const catalogue = await getCatalogue();
@@ -49,14 +56,14 @@ skillsRouter.get('/:id/download', async (req, res, next) => {
   } catch (err) {
     next(err);
   }
-});
+}
 
-// Per-file content. `path` may itself contain slashes — Express does not match
-// across `/` by default, so we use a wildcard segment.
-skillsRouter.get('/:id/files/*', async (req, res, next) => {
+// Both the skill id and file path may contain slashes, so wildcard routes keep
+// nested marketplace categories addressable.
+async function skillFileHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const id = decodeId(req);
-    const relPath = (req.params as unknown as { 0: string })[0];
+    const relPath = decodeFilePath(req);
     if (!relPath) {
       res.status(400).json({ error: 'missing_file_path' });
       return;
@@ -96,8 +103,15 @@ skillsRouter.get('/:id/files/*', async (req, res, next) => {
   } catch (err) {
     next(err);
   }
-});
+}
 
 function decodeId(req: Request): string {
-  return decodeURIComponent(req.params.id);
+  const params = req.params as Record<string, string | undefined>;
+  return decodeURIComponent(params.id ?? params[0] ?? '');
+}
+
+function decodeFilePath(req: Request): string {
+  const params = req.params as Record<string, string | undefined>;
+  const rawPath = typeof params.id === 'string' ? params[0] : params[1];
+  return rawPath ? decodeURIComponent(rawPath) : '';
 }

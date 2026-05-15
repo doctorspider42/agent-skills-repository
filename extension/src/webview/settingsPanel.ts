@@ -11,6 +11,7 @@ interface InboundMessage {
     defaultScope?: InstallScope;
     projectSkillsPath?: string;
     globalSkillsPath?: string;
+    source?: 'connection' | 'locations';
   };
 }
 
@@ -114,7 +115,7 @@ export class SettingsPanel {
         if (typeof p.apiKey === 'string' && p.apiKey.trim() !== '') {
           await setApiKey(this.context, p.apiKey.trim());
         }
-        await this.post({ type: 'saved' });
+        await this.post({ type: 'saved', payload: { source: p.source ?? 'connection' } });
         await this.sendState();
         this.onChanged();
         return;
@@ -285,6 +286,22 @@ export class SettingsPanel {
     display: inline-block;
   }
   .footer-link:hover { text-decoration: underline; }
+  .card-header {
+    display: flex;
+    align-items: center;
+    margin: 0 0 16px 0;
+  }
+  .card-header h2 { margin: 0; }
+  .saved-hint {
+    margin-left: auto;
+    font-size: 0.75rem;
+    color: var(--vscode-descriptionForeground);
+    opacity: 0;
+    transition: opacity 180ms ease-in-out;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .saved-hint.show { opacity: 0.85; }
   .key-meta {
     font-size: 0.8rem;
     color: var(--vscode-descriptionForeground);
@@ -330,7 +347,10 @@ export class SettingsPanel {
 </div>
 
 <div class="card">
-  <h2>Install Locations</h2>
+  <div class="card-header">
+    <h2>Install Locations</h2>
+    <span class="saved-hint" id="locationsSaved">Saved</span>
+  </div>
 
   <div class="field">
     <label for="defaultScope">Default scope</label>
@@ -344,7 +364,7 @@ export class SettingsPanel {
   <div class="field">
     <label for="projectSkillsPath">Project skills path</label>
     <input id="projectSkillsPath" type="text" placeholder=".github/skills" autocomplete="off" />
-    <div class="hint">Relative to the workspace root. The install picker also suggests <code>.claude/skills</code>.</div>
+    <div class="hint">Relative to the workspace root.</div>
   </div>
 
   <div class="field">
@@ -368,11 +388,16 @@ export class SettingsPanel {
     testBtn: $('testBtn'),
     saveBtn: $('saveBtn'),
     status: $('status'),
+    locationsSaved: $('locationsSaved'),
     defaultScope: $('defaultScope'),
     projectSkillsPath: $('projectSkillsPath'),
     globalSkillsPath: $('globalSkillsPath'),
     openNative: $('openNative')
   };
+
+  let stateApplying = false;
+  let locationSaveTimer;
+  let locationsSavedTimer;
 
   function setStatus(kind, text) {
     els.status.className = 'status show ' + kind;
@@ -381,6 +406,29 @@ export class SettingsPanel {
   function clearStatus() {
     els.status.className = 'status';
     els.status.textContent = '';
+  }
+  function showLocationsSaved() {
+    clearTimeout(locationsSavedTimer);
+    els.locationsSaved.classList.add('show');
+    locationsSavedTimer = setTimeout(() => {
+      els.locationsSaved.classList.remove('show');
+    }, 1800);
+  }
+  function scheduleLocationSave() {
+    if (stateApplying) return;
+    clearTimeout(locationSaveTimer);
+    els.locationsSaved.classList.remove('show');
+    locationSaveTimer = setTimeout(() => {
+      vscode.postMessage({
+        type: 'save',
+        payload: {
+          source: 'locations',
+          defaultScope: els.defaultScope.value,
+          projectSkillsPath: els.projectSkillsPath.value,
+          globalSkillsPath: els.globalSkillsPath.value
+        }
+      });
+    }, 500);
   }
 
   els.toggleKey.addEventListener('click', () => {
@@ -405,6 +453,7 @@ export class SettingsPanel {
       payload: {
         apiUrl: els.apiUrl.value,
         apiKey: els.apiKey.value,
+        source: 'connection',
         defaultScope: els.defaultScope.value,
         projectSkillsPath: els.projectSkillsPath.value,
         globalSkillsPath: els.globalSkillsPath.value
@@ -416,10 +465,15 @@ export class SettingsPanel {
     vscode.postMessage({ type: 'reveal' });
   });
 
+  els.defaultScope.addEventListener('change', scheduleLocationSave);
+  els.projectSkillsPath.addEventListener('input', scheduleLocationSave);
+  els.globalSkillsPath.addEventListener('input', scheduleLocationSave);
+
   window.addEventListener('message', (event) => {
     const msg = event.data;
     if (msg.type === 'state') {
       const p = msg.payload;
+      stateApplying = true;
       els.apiUrl.value = p.apiUrl || '';
       els.defaultScope.value = p.defaultScope || 'project';
       els.projectSkillsPath.value = p.projectSkillsPath || '';
@@ -428,13 +482,18 @@ export class SettingsPanel {
       els.keyMeta.textContent = p.hasApiKey
         ? 'Stored key: ' + p.apiKeyPreview
         : 'No key stored.';
+      stateApplying = false;
     } else if (msg.type === 'testResult') {
       els.testBtn.disabled = false;
       setStatus(msg.payload.ok ? 'ok' : 'err', msg.payload.message);
     } else if (msg.type === 'saved') {
-      els.saveBtn.disabled = false;
-      setStatus('ok', 'Saved.');
-      setTimeout(clearStatus, 2500);
+      if (msg.payload && msg.payload.source === 'locations') {
+        showLocationsSaved();
+      } else {
+        els.saveBtn.disabled = false;
+        setStatus('ok', 'Saved.');
+        setTimeout(clearStatus, 2500);
+      }
     }
   });
 

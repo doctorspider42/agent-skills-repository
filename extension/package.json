@@ -2,7 +2,7 @@
   "name": "agent-skills-repository",
   "displayName": "Agent Skills Repository",
   "description": "Browse, install and update Agent skills from your private repository.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "doctorspider",
   "license": "MIT",
     "repository": {
@@ -45,7 +45,7 @@
         "agentSkills.projectSkillsPath": {
           "type": "string",
           "default": ".github/skills",
-          "description": "Path inside the workspace used for the 'project' scope. The picker also suggests .claude/skills.",
+          "description": "Path inside the workspace used for the 'project' scope.",
           "scope": "resource"
         },
         "agentSkills.requestTimeoutMs": {

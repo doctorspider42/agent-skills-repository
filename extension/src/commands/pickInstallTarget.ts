@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import * as path from 'path';
 import { ResolvedConfig, resolveScopePath } from '../config';
 import { InstallScope } from '../types';
 
@@ -28,7 +27,6 @@ export async function pickInstallTarget(cfg: ResolvedConfig): Promise<InstallTar
     });
   }
 
-  const folder = vscode.workspace.workspaceFolders?.[0];
   const projectPath = resolveScopePath('project', cfg);
 
   if (projectPath) {
@@ -39,21 +37,6 @@ export async function pickInstallTarget(cfg: ResolvedConfig): Promise<InstallTar
       scope: 'project',
       rootDir: projectPath
     });
-
-    // Always also offer .claude/skills as a quick alternative
-    if (folder) {
-      const altRel = '.claude/skills';
-      if (cfg.projectSkillsPath !== altRel) {
-        const altAbs = path.join(folder.uri.fsPath, altRel);
-        items.push({
-          label: `$(folder) Project — ${altRel}`,
-          description: altAbs,
-          detail: 'Common alternative location.',
-          scope: 'project',
-          rootDir: altAbs
-        });
-      }
-    }
   } else {
     // Relative projectSkillsPath but no workspace folder open — show the option
     // anyway so the user knows it exists, with a clear "open a folder first" hint.

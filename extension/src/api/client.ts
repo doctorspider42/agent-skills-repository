@@ -54,7 +54,7 @@ export class SkillsApiClient {
 
   async getSkill(id: string): Promise<SkillDetail> {
     try {
-      const res = await this.http.get<SkillDetail>(`/skills/${encodeURIComponent(id)}`);
+      const res = await this.http.get<SkillDetail>(`/skills/${encodeSkillIdPath(id)}`);
       return res.data;
     } catch (err) {
       throw toApiError(err, `Failed to fetch skill ${id}`);
@@ -64,7 +64,7 @@ export class SkillsApiClient {
   async downloadSkillZip(id: string): Promise<Buffer> {
     try {
       const res = await this.http.get<ArrayBuffer>(
-        `/skills/${encodeURIComponent(id)}/download`,
+        `/skills/${encodeSkillIdPath(id)}/download`,
         { responseType: 'arraybuffer' }
       );
       return Buffer.from(res.data);
@@ -77,6 +77,10 @@ export class SkillsApiClient {
 function truncate(value: string, max = 120): string {
   if (value.length <= max) return value;
   return value.slice(0, max) + '…';
+}
+
+function encodeSkillIdPath(id: string): string {
+  return id.split('/').map(encodeURIComponent).join('/');
 }
 
 function toApiError(err: unknown, fallback: string): ApiError {
