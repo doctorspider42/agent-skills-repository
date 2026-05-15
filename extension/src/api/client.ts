@@ -72,6 +72,18 @@ export class SkillsApiClient {
       throw toApiError(err, `Failed to download skill ${id}`);
     }
   }
+
+  async getSkillFileText(id: string, relativePath: string): Promise<string> {
+    try {
+      const res = await this.http.get<ArrayBuffer>(
+        `/skills/${encodeSkillIdPath(id)}/files/${encodeSkillIdPath(relativePath)}`,
+        { responseType: 'arraybuffer' }
+      );
+      return Buffer.from(res.data).toString('utf8');
+    } catch (err) {
+      throw toApiError(err, `Failed to fetch ${relativePath} for skill ${id}`);
+    }
+  }
 }
 
 function truncate(value: string, max = 120): string {

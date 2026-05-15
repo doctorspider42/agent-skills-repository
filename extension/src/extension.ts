@@ -6,10 +6,12 @@ import { updateSkillCommand } from './commands/update';
 import { testConnection } from './commands/testConnection';
 import { setApiKeyCommand, clearApiKeyCommand } from './commands/setApiKey';
 import { openSkillFolderCommand } from './commands/openSkillFolder';
+import { registerSkillPreviewProvider } from './commands/preview';
 import { SettingsPanel } from './webview/settingsPanel';
 
 export function activate(context: vscode.ExtensionContext): void {
   const provider = new SkillsTreeProvider(context);
+  const previewProvider = registerSkillPreviewProvider(context);
 
   const view = vscode.window.createTreeView('agentSkillsExplorer', {
     treeDataProvider: provider,
@@ -23,13 +25,16 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('agentSkills.setApiKey', () => setApiKeyCommand(context)),
     vscode.commands.registerCommand('agentSkills.clearApiKey', () => clearApiKeyCommand(context)),
     vscode.commands.registerCommand('agentSkills.install', (node?: SkillNode) =>
-      installSkillCommand(context, provider, node)
+      installSkillCommand(context, provider, node, previewProvider)
     ),
     vscode.commands.registerCommand('agentSkills.uninstall', (node?: SkillNode) =>
       uninstallSkillCommand(provider, node)
     ),
     vscode.commands.registerCommand('agentSkills.update', (node?: SkillNode) =>
       updateSkillCommand(context, provider, node)
+    ),
+    vscode.commands.registerCommand('agentSkills.preview', (node?: SkillNode) =>
+      previewProvider.open(context, node)
     ),
     vscode.commands.registerCommand('agentSkills.openSkillFolder', (node?: SkillNode) =>
       openSkillFolderCommand(node)

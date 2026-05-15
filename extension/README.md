@@ -8,7 +8,9 @@ Browse, install and update agent skills hosted in your private Skills API.
 - Three states per skill: not installed, installed, **update available** (badge
   appears when the version in the catalogue differs from the locally installed
   one).
-- Right-click actions: Install / Uninstall / Update / Reveal in Explorer.
+- Right-click actions: Preview / Install / Uninstall / Update / Reveal in Explorer.
+- Read-only skill preview opens `SKILL.md` directly from the repository before
+  installation.
 - Install location picker: **Global** (`~/.claude/skills`), **Project**
   (`./.github/skills` or `./.claude/skills`) or any custom directory.
 - API key stored in the OS keychain via `vscode.SecretStorage`.
@@ -64,6 +66,7 @@ unless you know what you're doing — uninstall through the UI instead.
 | `agentSkills.testConnection`     | Test Connection             |
 | `agentSkills.setApiKey`          | Set API Key                 |
 | `agentSkills.clearApiKey`        | Clear API Key               |
+| `agentSkills.preview`            | Preview Skill               |
 | `agentSkills.install`            | Install (tree context)      |
 | `agentSkills.uninstall`          | Uninstall (tree context)    |
 | `agentSkills.update`             | Update (tree context)       |
