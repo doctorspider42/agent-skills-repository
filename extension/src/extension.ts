@@ -25,7 +25,7 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('agentSkills.setApiKey', () => setApiKeyCommand(context)),
     vscode.commands.registerCommand('agentSkills.clearApiKey', () => clearApiKeyCommand(context)),
     vscode.commands.registerCommand('agentSkills.install', (node?: SkillNode) =>
-      installSkillCommand(context, provider, node, previewProvider)
+      installSkillCommand(context, provider, node)
     ),
     vscode.commands.registerCommand('agentSkills.uninstall', (node?: SkillNode) =>
       uninstallSkillCommand(provider, node)

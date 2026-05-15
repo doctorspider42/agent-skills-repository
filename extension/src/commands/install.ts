@@ -5,13 +5,11 @@ import { installSkill } from '../installer';
 import { SkillsTreeProvider } from '../tree/skillsProvider';
 import { SkillNode } from '../tree/skillsProvider';
 import { pickInstallTarget } from './pickInstallTarget';
-import { SkillPreviewProvider } from './preview';
 
 export async function installSkillCommand(
   context: vscode.ExtensionContext,
   provider: SkillsTreeProvider,
-  node: SkillNode | undefined,
-  previewProvider: SkillPreviewProvider
+  node: SkillNode | undefined
 ): Promise<void> {
   if (!node || node.kind !== 'skill') {
     vscode.window.showWarningMessage('Pick a skill in the tree first.');
@@ -22,18 +20,6 @@ export async function installSkillCommand(
   if (!cfg.apiUrl || !apiKey) {
     vscode.window.showErrorMessage('Configure apiUrl and API key first.');
     return;
-  }
-
-  const action = await pickInstallAction(node);
-  if (!action) return;
-  if (action === 'Preview') {
-    await previewProvider.open(context, node);
-    const shouldInstall = await vscode.window.showInformationMessage(
-      `Install ${node.skill.metadata.name}?`,
-      { modal: true },
-      'Install'
-    );
-    if (shouldInstall !== 'Install') return;
   }
 
   const target = await pickInstallTarget(cfg);
@@ -62,17 +48,5 @@ export async function installSkillCommand(
         vscode.window.showErrorMessage(`Install failed: ${(err as Error).message}`);
       }
     }
-  );
-}
-
-async function pickInstallAction(node: SkillNode): Promise<'Preview' | 'Install' | undefined> {
-  return vscode.window.showInformationMessage(
-    `Install ${node.skill.metadata.name}?`,
-    {
-      modal: true,
-      detail: 'You can preview SKILL.md before choosing where to install this skill.'
-    },
-    'Preview',
-    'Install'
   );
 }
