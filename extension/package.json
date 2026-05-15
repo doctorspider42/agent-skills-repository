@@ -2,7 +2,7 @@
   "name": "agent-skills-repository",
   "displayName": "Agent Skills Repository",
   "description": "Browse, install and update Agent skills from your private repository.",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "publisher": "doctorspider",
   "license": "MIT",
     "repository": {
