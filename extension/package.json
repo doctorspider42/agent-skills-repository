@@ -1,0 +1,179 @@
+{
+  "name": "agent-skills-repository",
+  "displayName": "Agent Skills Repository",
+  "description": "Browse, install and update Agent skills from your private repository.",
+  "version": "0.1.0",
+  "publisher": "doctorspider",
+  "license": "MIT",
+    "repository": {
+    "type": "git",
+    "url": "https://github.com/doctorspider42/agent-skills-repository.git",
+    "directory": "extension"
+  },
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": [
+    "onView:agentSkillsExplorer",
+    "onCommand:agentSkills.testConnection",
+    "onCommand:agentSkills.openSettings"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "Agent Skills Repository",
+      "properties": {
+        "agentSkills.apiUrl": {
+          "type": "string",
+          "default": "",
+          "description": "Base URL of the Skills API (e.g. https://skills.internal.example.com).",
+          "scope": "machine-overridable"
+        },
+        "agentSkills.defaultScope": {
+          "type": "string",
+          "enum": ["global", "project"],
+          "default": "project",
+          "description": "Where new skills are installed when no scope is chosen interactively."
+        },
+        "agentSkills.globalSkillsPath": {
+          "type": "string",
+          "default": "",
+          "description": "Absolute path used for the 'global' scope. Empty = ${HOME}/.claude/skills.",
+          "scope": "machine"
+        },
+        "agentSkills.projectSkillsPath": {
+          "type": "string",
+          "default": ".github/skills",
+          "description": "Path inside the workspace used for the 'project' scope. The picker also suggests .claude/skills.",
+          "scope": "resource"
+        },
+        "agentSkills.requestTimeoutMs": {
+          "type": "number",
+          "default": 30000,
+          "description": "HTTP request timeout for API calls (ms)."
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "agentSkills.refresh",
+        "title": "Agent Skills: Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "agentSkills.openSettings",
+        "title": "Agent Skills: Open Settings",
+        "icon": "$(gear)"
+      },
+      {
+        "command": "agentSkills.testConnection",
+        "title": "Agent Skills: Test Connection",
+        "icon": "$(plug)"
+      },
+      {
+        "command": "agentSkills.setApiKey",
+        "title": "Agent Skills: Set API Key"
+      },
+      {
+        "command": "agentSkills.clearApiKey",
+        "title": "Agent Skills: Clear API Key"
+      },
+      {
+        "command": "agentSkills.install",
+        "title": "Install Skill",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "agentSkills.uninstall",
+        "title": "Uninstall Skill",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "agentSkills.update",
+        "title": "Update Skill",
+        "icon": "$(sync)"
+      },
+      {
+        "command": "agentSkills.openSkillFolder",
+        "title": "Reveal in Explorer"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "agentSkills",
+          "title": "Agent Skills Repository",
+          "icon": "resources/skills.svg"
+        }
+      ]
+    },
+    "views": {
+      "agentSkills": [
+        {
+          "id": "agentSkillsExplorer",
+          "name": "Skills",
+          "icon": "resources/skills.svg",
+          "contextualTitle": "Agent Skills Repository"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "agentSkills.refresh",
+          "when": "view == agentSkillsExplorer",
+          "group": "navigation@1"
+        },
+        {
+          "command": "agentSkills.testConnection",
+          "when": "view == agentSkillsExplorer",
+          "group": "navigation@2"
+        },
+        {
+          "command": "agentSkills.openSettings",
+          "when": "view == agentSkillsExplorer",
+          "group": "navigation@3"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "agentSkills.install",
+          "when": "view == agentSkillsExplorer && viewItem == skill.notInstalled",
+          "group": "inline"
+        },
+        {
+          "command": "agentSkills.update",
+          "when": "view == agentSkillsExplorer && viewItem == skill.updateAvailable",
+          "group": "inline"
+        },
+        {
+          "command": "agentSkills.uninstall",
+          "when": "view == agentSkillsExplorer && viewItem =~ /^skill\\.(installed|updateAvailable)$/",
+          "group": "inline"
+        },
+        {
+          "command": "agentSkills.openSkillFolder",
+          "when": "view == agentSkillsExplorer && viewItem =~ /^skill\\.(installed|updateAvailable)$/",
+          "group": "1_navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "build": "tsc -p ./",
+    "watch": "tsc -p ./ -w",
+    "typecheck": "tsc -p ./ --noEmit",
+    "package": "vsce package"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.12",
+    "axios": "^1.7.2"
+  },
+  "devDependencies": {
+    "@types/adm-zip": "^0.5.5",
+    "@types/node": "^18.19.0",
+    "@types/vscode": "^1.80.0",
+    "typescript": "^5.4.5"
+  }
+}

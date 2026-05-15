@@ -1,0 +1,8 @@
+name: PR Summary
+version: 1.0.0
+author: Example DevTools
+description: Generates a pull request description (summary, changes, test plan) from the branch diff.
+tags:
+  - git
+  - code-review
+  - workflow

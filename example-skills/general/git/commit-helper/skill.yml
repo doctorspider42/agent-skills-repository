@@ -1,0 +1,8 @@
+name: Commit Helper
+version: 1.2.0
+author: Jane Doe <jane@example.com>
+description: Generates Conventional Commit messages from the staged diff.
+tags:
+  - git
+  - workflow
+homepage: https://example.com/skills/commit-helper

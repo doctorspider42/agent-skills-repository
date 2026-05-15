@@ -1,0 +1,39 @@
+{
+  "name": "skills-api",
+  "version": "0.1.1",
+  "description": "REST API serving Claude Code skills from Azure Blob Storage",
+  "main": "dist/src/index.js",
+  "bin": {
+    "skills-api": "dist/src/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/src/index.js",
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "seed": "ts-node-dev --transpile-only scripts/seed-skills.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@azure/storage-blob": "^12.17.0",
+    "archiver": "^7.0.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/archiver": "^6.0.2",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20.12.7",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.4.5"
+  }
+}
