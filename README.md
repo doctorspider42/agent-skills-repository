@@ -16,6 +16,8 @@ A two-piece system for distributing Claude Code skills inside an organisation:
 - **[`docs/skill-yml-schema.md`](./docs/skill-yml-schema.md)** — required and optional fields in
   `skill.yml`. The yml file is **optional**: skills without one still show up, just with
   `unknown` for missing fields.
+- **[`docs/entra-setup.md`](./docs/entra-setup.md)** — step-by-step guide for configuring
+  Microsoft Entra ID (Azure AD) SSO instead of (or alongside) the API key.
 
 ## Storage layout
 

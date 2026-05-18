@@ -62,6 +62,10 @@ Keys are configured in `API_KEYS` (comma-separated).
 
 ### Entra ID (Microsoft / Azure AD SSO)
 
+> **Need step-by-step setup?** See the dedicated walkthrough:
+> **[`../docs/entra-setup.md`](../docs/entra-setup.md)** — covers the two App Registrations,
+> exposing the API scope, env vars, extension config, and rollout.
+
 When `AUTH_MODE=entra` (or `both`), the API also accepts JWT access tokens issued
 by your Entra ID tenant:
 

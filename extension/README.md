@@ -17,6 +17,7 @@ Browse, install and update agent skills hosted in your private Skills API.
   - `apiKey` — legacy shared key stored in the OS keychain via `vscode.SecretStorage`.
   - `entra` — sign in with your Microsoft / company account via Entra ID (Azure AD).
     Uses VS Code's built-in Microsoft provider (automatic token refresh, no client secret).
+    **Setup walkthrough:** [`../docs/entra-setup.md`](../docs/entra-setup.md).
 - "Test Connection" command pings `GET /auth/verify` to validate the URL + credentials,
   and (in Entra mode) reports the signed-in account.
 
