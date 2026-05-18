@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
-import { SkillsApiClient } from '../api/client';
-import { getApiKey, readConfig } from '../config';
+import { createApiClient } from '../auth';
 import { AgentNode } from '../tree/agentsProvider';
 
 const PREVIEW_SCHEME = 'agent-preview';
@@ -23,15 +22,10 @@ export class AgentPreviewProvider implements vscode.TextDocumentContentProvider 
       return;
     }
 
-    const cfg = readConfig();
-    const apiKey = await getApiKey(context);
-    if (!cfg.apiUrl || !apiKey) {
-      vscode.window.showErrorMessage('Configure apiUrl and API key first.');
-      return;
-    }
+    const client = await createApiClient(context, { interactive: true });
+    if (!client) return;
 
     try {
-      const client = new SkillsApiClient(cfg.apiUrl, apiKey, cfg.requestTimeoutMs);
       const markerFile = `${node.agent.directoryName}.md`;
       const content = await client.getAgentFileText(node.agent.id, markerFile);
       const label = node.agent.metadata.name || node.agent.directoryName;

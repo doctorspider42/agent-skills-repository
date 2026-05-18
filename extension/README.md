@@ -13,8 +13,12 @@ Browse, install and update agent skills hosted in your private Skills API.
   installation.
 - Install location picker: **Global** (`~/.claude/skills`), **Project**
   (`./.github/skills` or `./.claude/skills`) or any custom directory.
-- API key stored in the OS keychain via `vscode.SecretStorage`.
-- "Test Connection" command pings `GET /auth/verify` to validate the URL + key.
+- Two authentication modes (per the `agentSkills.authMode` setting):
+  - `apiKey` — legacy shared key stored in the OS keychain via `vscode.SecretStorage`.
+  - `entra` — sign in with your Microsoft / company account via Entra ID (Azure AD).
+    Uses VS Code's built-in Microsoft provider (automatic token refresh, no client secret).
+- "Test Connection" command pings `GET /auth/verify` to validate the URL + credentials,
+  and (in Entra mode) reports the signed-in account.
 
 ## Setup
 
@@ -66,6 +70,8 @@ unless you know what you're doing — uninstall through the UI instead.
 | `agentSkills.testConnection`     | Test Connection             |
 | `agentSkills.setApiKey`          | Set API Key                 |
 | `agentSkills.clearApiKey`        | Clear API Key               |
+| `agentSkills.signIn`             | Sign in with Microsoft      |
+| `agentSkills.signOut`            | Sign out (Accounts menu)    |
 | `agentSkills.preview`            | Preview Skill               |
 | `agentSkills.install`            | Install (tree context)      |
 | `agentSkills.uninstall`          | Uninstall (tree context)    |

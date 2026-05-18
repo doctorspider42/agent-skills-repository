@@ -6,6 +6,7 @@ import { uninstallSkillCommand } from './commands/uninstall';
 import { updateSkillCommand } from './commands/update';
 import { testConnection } from './commands/testConnection';
 import { setApiKeyCommand, clearApiKeyCommand } from './commands/setApiKey';
+import { signInCommand, signOutCommand } from './commands/signIn';
 import { openSkillFolderCommand } from './commands/openSkillFolder';
 import { registerSkillPreviewProvider } from './commands/preview';
 import { installAgentCommand } from './commands/installAgent';
@@ -42,6 +43,8 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('agentSkills.testConnection', () => testConnection(context)),
     vscode.commands.registerCommand('agentSkills.setApiKey', () => setApiKeyCommand(context)),
     vscode.commands.registerCommand('agentSkills.clearApiKey', () => clearApiKeyCommand(context)),
+    vscode.commands.registerCommand('agentSkills.signIn', () => signInCommand()),
+    vscode.commands.registerCommand('agentSkills.signOut', () => signOutCommand()),
     vscode.commands.registerCommand('agentSkills.install', (node?: SkillNode) =>
       installSkillCommand(context, skillsProvider, node)
     ),
@@ -84,6 +87,12 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration('agentSkills')) {
+        skillsProvider.refresh();
+        agentsProvider.refresh();
+      }
+    }),
+    vscode.authentication.onDidChangeSessions((e) => {
+      if (e.provider.id === 'microsoft') {
         skillsProvider.refresh();
         agentsProvider.refresh();
       }

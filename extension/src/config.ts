@@ -6,8 +6,14 @@ import { InstallScope } from './types';
 const NAMESPACE = 'agentSkills';
 const SECRET_API_KEY = 'agentSkills.apiKey';
 
+export type AuthMode = 'apiKey' | 'entra';
+
 export interface ResolvedConfig {
   apiUrl: string;
+  authMode: AuthMode;
+  entraTenantId: string;
+  entraClientId: string;
+  entraScope: string;
   defaultScope: InstallScope;
   globalSkillsPath: string;
   projectSkillsPath: string;
@@ -19,6 +25,10 @@ export interface ResolvedConfig {
 export function readConfig(): ResolvedConfig {
   const c = vscode.workspace.getConfiguration(NAMESPACE);
   const apiUrl = (c.get<string>('apiUrl') ?? '').trim().replace(/\/+$/, '');
+  const authMode = (c.get<AuthMode>('authMode') ?? 'apiKey') as AuthMode;
+  const entraTenantId = (c.get<string>('entra.tenantId') ?? '').trim();
+  const entraClientId = (c.get<string>('entra.clientId') ?? '').trim();
+  const entraScope = (c.get<string>('entra.scope') ?? '').trim();
   const defaultScope = (c.get<InstallScope>('defaultScope') ?? 'project');
   const globalPathSetting = (c.get<string>('globalSkillsPath') ?? '').trim();
   const projectPathSetting = (c.get<string>('projectSkillsPath') ?? '.github/skills').trim();
@@ -28,6 +38,10 @@ export function readConfig(): ResolvedConfig {
 
   return {
     apiUrl,
+    authMode,
+    entraTenantId,
+    entraClientId,
+    entraScope,
     defaultScope,
     globalSkillsPath: globalPathSetting || path.join(os.homedir(), '.claude', 'skills'),
     projectSkillsPath: projectPathSetting || '.github/skills',

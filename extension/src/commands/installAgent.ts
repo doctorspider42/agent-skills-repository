@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { SkillsApiClient } from '../api/client';
-import { getApiKey, readConfig } from '../config';
+import { createApiClient } from '../auth';
+import { readConfig } from '../config';
 import { installAgent } from '../agentInstaller';
 import { AgentsTreeProvider, AgentNode } from '../tree/agentsProvider';
 import { pickAgentInstallTarget } from './pickAgentInstallTarget';
@@ -15,11 +15,8 @@ export async function installAgentCommand(
     return;
   }
   const cfg = readConfig();
-  const apiKey = await getApiKey(context);
-  if (!cfg.apiUrl || !apiKey) {
-    vscode.window.showErrorMessage('Configure apiUrl and API key first.');
-    return;
-  }
+  const client = await createApiClient(context, { interactive: true });
+  if (!client) return;
 
   const target = await pickAgentInstallTarget(cfg);
   if (!target) return;
@@ -31,7 +28,6 @@ export async function installAgentCommand(
     },
     async () => {
       try {
-        const client = new SkillsApiClient(cfg.apiUrl, apiKey, cfg.requestTimeoutMs);
         const detail = await client.getAgent(node.agent.id);
         const entry = await installAgent(client, {
           detail,

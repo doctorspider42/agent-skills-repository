@@ -33,6 +33,35 @@
           "description": "Base URL of the Skills API (e.g. https://skills.internal.example.com).",
           "scope": "machine-overridable"
         },
+        "agentSkills.authMode": {
+          "type": "string",
+          "enum": ["apiKey", "entra"],
+          "default": "apiKey",
+          "enumDescriptions": [
+            "Authenticate with a shared API key (legacy).",
+            "Sign in with your Microsoft / company account via Entra ID (Azure AD)."
+          ],
+          "description": "How the extension authenticates against the Skills API.",
+          "scope": "machine-overridable"
+        },
+        "agentSkills.entra.tenantId": {
+          "type": "string",
+          "default": "",
+          "description": "Microsoft Entra ID tenant ID (GUID). Used when authMode = 'entra'.",
+          "scope": "machine-overridable"
+        },
+        "agentSkills.entra.clientId": {
+          "type": "string",
+          "default": "",
+          "description": "Optional: client ID of the VS Code app registration in your tenant. Leave empty to use VS Code's built-in Microsoft app.",
+          "scope": "machine-overridable"
+        },
+        "agentSkills.entra.scope": {
+          "type": "string",
+          "default": "",
+          "description": "OAuth scope requested when signing in (e.g. api://<api-app-id>/Skills.Access). Required when authMode = 'entra'.",
+          "scope": "machine-overridable"
+        },
         "agentSkills.defaultScope": {
           "type": "string",
           "enum": ["global", "project"],
@@ -93,6 +122,14 @@
       {
         "command": "agentSkills.clearApiKey",
         "title": "Agent Skills: Clear API Key"
+      },
+      {
+        "command": "agentSkills.signIn",
+        "title": "Agent Skills: Sign in with Microsoft"
+      },
+      {
+        "command": "agentSkills.signOut",
+        "title": "Agent Skills: Sign out"
       },
       {
         "command": "agentSkills.preview",

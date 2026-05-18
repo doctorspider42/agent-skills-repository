@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { SkillsApiClient } from '../api/client';
+import { createApiClient } from '../auth';
 import { readConfig, resolveScopePath, getApiKey } from '../config';
 import { collectInstalled, InstalledLookup } from '../manifest';
 import { SkillStatus, SkillSummary } from '../types';
@@ -77,16 +77,25 @@ export class SkillsTreeProvider implements vscode.TreeDataProvider<TreeNode> {
   private async loadRoot(): Promise<TreeNode[]> {
     const cfg = readConfig();
     if (!cfg.apiUrl) {
-      return [msg('Click here to set API URL & key…')];
+      return [msg('Click here to set API URL & auth…')];
     }
-    const apiKey = await getApiKey(this.context);
-    if (!apiKey) {
-      return [msg('Click here to set the API key…')];
+    if (cfg.authMode === 'apiKey') {
+      const apiKey = await getApiKey(this.context);
+      if (!apiKey) return [msg('Click here to set the API key…')];
+    } else {
+      if (!cfg.entraTenantId || !cfg.entraScope) {
+        return [msg('Click here to configure Entra ID (tenant + scope)…')];
+      }
     }
 
     let skills: SkillSummary[];
     try {
-      const client = new SkillsApiClient(cfg.apiUrl, apiKey, cfg.requestTimeoutMs);
+      const client = await createApiClient(this.context, { interactive: false });
+      if (!client) {
+        return [msg(cfg.authMode === 'entra'
+          ? 'Sign in with Microsoft to load skills…'
+          : 'Click here to set the API key…')];
+      }
       skills = await client.listSkills();
     } catch (err) {
       return [msg(`Failed to load: ${(err as Error).message}`)];

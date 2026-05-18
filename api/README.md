@@ -47,7 +47,11 @@ extension (`.md` → markdown, `.yml` → yaml, etc.).
 
 ## Auth
 
-Every endpoint except `/health` requires an API key. Provide it via either:
+Two schemes are supported, selected via `AUTH_MODE` (`apikey` | `entra` | `both`).
+
+### API key (legacy)
+
+Provide the key via either header:
 
 ```
 x-api-key: <key>
@@ -55,6 +59,33 @@ Authorization: Bearer <key>
 ```
 
 Keys are configured in `API_KEYS` (comma-separated).
+
+### Entra ID (Microsoft / Azure AD SSO)
+
+When `AUTH_MODE=entra` (or `both`), the API also accepts JWT access tokens issued
+by your Entra ID tenant:
+
+```
+Authorization: Bearer eyJ0eXAi... (RS256 JWT)
+```
+
+The token is validated against the tenant's JWKS endpoint (`iss`, `aud`, `exp`,
+signature, optional `scp`/`roles`). Required env vars:
+
+- `ENTRA_TENANT_ID` — your tenant GUID.
+- `ENTRA_API_AUDIENCE` — App ID URI of the API App Registration (e.g.
+  `api://<api-app-id>`). Must equal the JWT's `aud`.
+- `ENTRA_REQUIRED_SCOPE` — optional, e.g. `Skills.Access`. Validated against
+  delegated `scp` (user tokens) and `roles` (app-only tokens).
+- `ENTRA_ALLOWED_TENANTS` — optional comma list (defaults to `ENTRA_TENANT_ID`).
+
+In `both` mode the middleware tries Entra first if the value looks like a JWT,
+then falls back to API key — useful while rolling out SSO to clients.
+
+### `GET /auth/mode`
+
+Returns the server's current `authMode`. The extension uses this to give
+better diagnostics when credentials are misconfigured.
 
 ## Endpoints
 

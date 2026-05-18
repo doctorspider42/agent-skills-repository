@@ -1,12 +1,12 @@
 import { NextFunction, Router, Request, Response } from 'express';
-import { apiKeyAuth } from '../auth';
+import { authMiddleware } from '../auth';
 import { blobPathFor, getCatalogue, toSummary } from '../agents/service';
 import { streamAgentZip } from '../agents/zip';
 import { agentsContainerClient } from '../azure/blobClient';
 
 export const agentsRouter = Router();
 
-agentsRouter.use(apiKeyAuth);
+agentsRouter.use(authMiddleware);
 
 agentsRouter.get('/', async (req, res, next) => {
   try {

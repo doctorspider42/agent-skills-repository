@@ -1,13 +1,17 @@
 import * as vscode from 'vscode';
-import { SkillsApiClient } from '../api/client';
-import { getApiKey, readConfig, setApiKey } from '../config';
+import { createApiClient } from '../auth';
+import { AuthMode, getApiKey, readConfig, setApiKey } from '../config';
 import { InstallScope } from '../types';
 
 interface InboundMessage {
-  type: 'ready' | 'save' | 'test' | 'reveal';
+  type: 'ready' | 'save' | 'test' | 'reveal' | 'signIn';
   payload?: {
     apiUrl?: string;
     apiKey?: string;
+    authMode?: AuthMode;
+    entraTenantId?: string;
+    entraClientId?: string;
+    entraScope?: string;
     defaultScope?: InstallScope;
     projectSkillsPath?: string;
     globalSkillsPath?: string;
@@ -75,10 +79,32 @@ export class SettingsPanel {
   private async sendState(): Promise<void> {
     const cfg = readConfig();
     const apiKey = await getApiKey(this.context);
+    let entraAccount = '';
+    if (cfg.authMode === 'entra' && cfg.entraTenantId && cfg.entraScope) {
+      try {
+        const scopes = [
+          `VSCODE_TENANT:${cfg.entraTenantId}`,
+          ...(cfg.entraClientId ? [`VSCODE_CLIENT_ID:${cfg.entraClientId}`] : []),
+          cfg.entraScope
+        ];
+        const session = await vscode.authentication.getSession('microsoft', scopes, {
+          createIfNone: false,
+          silent: true
+        });
+        entraAccount = session?.account.label ?? '';
+      } catch {
+        entraAccount = '';
+      }
+    }
     await this.post({
       type: 'state',
       payload: {
         apiUrl: cfg.apiUrl,
+        authMode: cfg.authMode,
+        entraTenantId: cfg.entraTenantId,
+        entraClientId: cfg.entraClientId,
+        entraScope: cfg.entraScope,
+        entraAccount,
         hasApiKey: Boolean(apiKey),
         apiKeyPreview: apiKey ? `${'•'.repeat(Math.max(0, apiKey.length - 4))}${apiKey.slice(-4)}` : '',
         defaultScope: cfg.defaultScope,
@@ -107,6 +133,18 @@ export class SettingsPanel {
         if (typeof p.apiUrl === 'string') {
           await config.update('apiUrl', p.apiUrl.trim().replace(/\/+$/, ''), target);
         }
+        if (typeof p.authMode === 'string') {
+          await config.update('authMode', p.authMode, target);
+        }
+        if (typeof p.entraTenantId === 'string') {
+          await config.update('entra.tenantId', p.entraTenantId.trim(), target);
+        }
+        if (typeof p.entraClientId === 'string') {
+          await config.update('entra.clientId', p.entraClientId.trim(), target);
+        }
+        if (typeof p.entraScope === 'string') {
+          await config.update('entra.scope', p.entraScope.trim(), target);
+        }
         if (typeof p.defaultScope === 'string') {
           await config.update('defaultScope', p.defaultScope, target);
         }
@@ -132,23 +170,22 @@ export class SettingsPanel {
       }
 
       case 'test': {
-        const p = msg.payload ?? {};
-        const cfg = readConfig();
-        const url = (p.apiUrl ?? cfg.apiUrl).trim().replace(/\/+$/, '');
-        const key = p.apiKey?.trim() || (await getApiKey(this.context));
-        if (!url || !key) {
+        const client = await createApiClient(this.context, { interactive: true });
+        if (!client) {
           await this.post({
             type: 'testResult',
-            payload: { ok: false, message: 'API URL and API key are both required.' }
+            payload: { ok: false, message: 'Auth not configured — see warnings above.' }
           });
           return;
         }
         try {
-          const client = new SkillsApiClient(url, key, cfg.requestTimeoutMs);
-          await client.verify();
+          const result = await client.verify();
+          const cfg = readConfig();
+          const who = result.user?.email || result.user?.name;
+          const suffix = who ? ` — signed in as ${who}` : '';
           await this.post({
             type: 'testResult',
-            payload: { ok: true, message: `Connected to ${url}` }
+            payload: { ok: true, message: `Connected to ${cfg.apiUrl}${suffix}` }
           });
         } catch (err) {
           await this.post({
@@ -156,6 +193,12 @@ export class SettingsPanel {
             payload: { ok: false, message: (err as Error).message }
           });
         }
+        return;
+      }
+
+      case 'signIn': {
+        await vscode.commands.executeCommand('agentSkills.signIn');
+        await this.sendState();
         return;
       }
 
@@ -350,13 +393,46 @@ export class SettingsPanel {
   </div>
 
   <div class="field">
-    <label for="apiKey">API Key</label>
-    <div class="key-row">
-      <input id="apiKey" type="password" placeholder="Paste a new key to replace…" autocomplete="off" />
-      <button type="button" class="icon-btn" id="toggleKey" title="Show / hide key">Show</button>
+    <label for="authMode">Authentication</label>
+    <select id="authMode">
+      <option value="apiKey">API Key (legacy)</option>
+      <option value="entra">Microsoft Entra ID (SSO)</option>
+    </select>
+    <div class="hint">Choose how the extension authenticates against the Skills API.</div>
+  </div>
+
+  <div id="apiKeyBlock">
+    <div class="field">
+      <label for="apiKey">API Key</label>
+      <div class="key-row">
+        <input id="apiKey" type="password" placeholder="Paste a new key to replace…" autocomplete="off" />
+        <button type="button" class="icon-btn" id="toggleKey" title="Show / hide key">Show</button>
+      </div>
+      <div class="key-meta" id="keyMeta">No key stored.</div>
+      <div class="hint">Stored in the OS keychain via VS Code SecretStorage. Leave empty to keep the existing key.</div>
     </div>
-    <div class="key-meta" id="keyMeta">No key stored.</div>
-    <div class="hint">Stored in the OS keychain via VS Code SecretStorage. Leave empty to keep the existing key.</div>
+  </div>
+
+  <div id="entraBlock" style="display:none">
+    <div class="field">
+      <label for="entraTenantId">Tenant ID</label>
+      <input id="entraTenantId" type="text" placeholder="e.g. 00000000-0000-0000-0000-000000000000" autocomplete="off" />
+      <div class="hint">GUID of your Microsoft Entra ID tenant.</div>
+    </div>
+    <div class="field">
+      <label for="entraScope">API scope</label>
+      <input id="entraScope" type="text" placeholder="api://&lt;api-app-id&gt;/Skills.Access" autocomplete="off" />
+      <div class="hint">Scope requested when signing in. Must match the API's expected audience + permission.</div>
+    </div>
+    <div class="field">
+      <label for="entraClientId">Client ID (optional)</label>
+      <input id="entraClientId" type="text" placeholder="(leave empty to use VS Code's built-in Microsoft app)" autocomplete="off" />
+      <div class="hint">Override only if your tenant blocks VS Code's default app and you registered your own.</div>
+    </div>
+    <div class="key-meta" id="entraAccount">Not signed in.</div>
+    <div class="actions" style="margin-top: 8px;">
+      <button type="button" class="secondary" id="signInBtn">Sign in with Microsoft</button>
+    </div>
   </div>
 
   <div class="actions">
@@ -419,9 +495,17 @@ export class SettingsPanel {
 
   const els = {
     apiUrl: $('apiUrl'),
+    authMode: $('authMode'),
+    apiKeyBlock: $('apiKeyBlock'),
+    entraBlock: $('entraBlock'),
     apiKey: $('apiKey'),
     keyMeta: $('keyMeta'),
     toggleKey: $('toggleKey'),
+    entraTenantId: $('entraTenantId'),
+    entraClientId: $('entraClientId'),
+    entraScope: $('entraScope'),
+    entraAccount: $('entraAccount'),
+    signInBtn: $('signInBtn'),
     testBtn: $('testBtn'),
     saveBtn: $('saveBtn'),
     status: $('status'),
@@ -433,6 +517,12 @@ export class SettingsPanel {
     globalAgentsPath: $('globalAgentsPath'),
     openNative: $('openNative')
   };
+
+  function applyAuthModeVisibility() {
+    const mode = els.authMode.value;
+    els.apiKeyBlock.style.display = mode === 'apiKey' ? '' : 'none';
+    els.entraBlock.style.display = mode === 'entra' ? '' : 'none';
+  }
 
   let stateApplying = false;
   let locationSaveTimer;
@@ -478,6 +568,11 @@ export class SettingsPanel {
     els.toggleKey.textContent = showing ? 'Show' : 'Hide';
   });
 
+  els.authMode.addEventListener('change', applyAuthModeVisibility);
+  els.signInBtn.addEventListener('click', () => {
+    vscode.postMessage({ type: 'signIn' });
+  });
+
   els.testBtn.addEventListener('click', () => {
     setStatus('info', 'Testing…');
     els.testBtn.disabled = true;
@@ -493,7 +588,11 @@ export class SettingsPanel {
       type: 'save',
       payload: {
         apiUrl: els.apiUrl.value,
+        authMode: els.authMode.value,
         apiKey: els.apiKey.value,
+        entraTenantId: els.entraTenantId.value,
+        entraClientId: els.entraClientId.value,
+        entraScope: els.entraScope.value,
         source: 'connection',
         defaultScope: els.defaultScope.value,
         projectSkillsPath: els.projectSkillsPath.value,
@@ -520,6 +619,13 @@ export class SettingsPanel {
       const p = msg.payload;
       stateApplying = true;
       els.apiUrl.value = p.apiUrl || '';
+      els.authMode.value = p.authMode || 'apiKey';
+      els.entraTenantId.value = p.entraTenantId || '';
+      els.entraClientId.value = p.entraClientId || '';
+      els.entraScope.value = p.entraScope || '';
+      els.entraAccount.textContent = p.entraAccount
+        ? 'Signed in as ' + p.entraAccount
+        : 'Not signed in.';
       els.defaultScope.value = p.defaultScope || 'project';
       els.projectSkillsPath.value = p.projectSkillsPath || '';
       els.globalSkillsPath.value = p.globalSkillsPath || '';
@@ -529,6 +635,7 @@ export class SettingsPanel {
       els.keyMeta.textContent = p.hasApiKey
         ? 'Stored key: ' + p.apiKeyPreview
         : 'No key stored.';
+      applyAuthModeVisibility();
       stateApplying = false;
     } else if (msg.type === 'testResult') {
       els.testBtn.disabled = false;

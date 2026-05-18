@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
-import { SkillsApiClient } from '../api/client';
-import { getApiKey, readConfig } from '../config';
+import { createApiClient } from '../auth';
 import { SkillNode } from '../tree/skillsProvider';
 
 const PREVIEW_SCHEME = 'agent-skill-preview';
@@ -24,15 +23,10 @@ export class SkillPreviewProvider implements vscode.TextDocumentContentProvider 
       return;
     }
 
-    const cfg = readConfig();
-    const apiKey = await getApiKey(context);
-    if (!cfg.apiUrl || !apiKey) {
-      vscode.window.showErrorMessage('Configure apiUrl and API key first.');
-      return;
-    }
+    const client = await createApiClient(context, { interactive: true });
+    if (!client) return;
 
     try {
-      const client = new SkillsApiClient(cfg.apiUrl, apiKey, cfg.requestTimeoutMs);
       const content = await client.getSkillFileText(node.skill.id, SKILL_FILE);
       const label = node.skill.metadata.name || node.skill.directoryName;
       const uri = this.uriFor(node.skill.id, label);

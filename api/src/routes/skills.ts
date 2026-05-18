@@ -1,12 +1,12 @@
 import { NextFunction, Router, Request, Response } from 'express';
-import { apiKeyAuth } from '../auth';
+import { authMiddleware } from '../auth';
 import { blobPathFor, getCatalogue, toSummary } from '../skills/service';
 import { streamSkillZip } from '../skills/zip';
 import { containerClient } from '../azure/blobClient';
 
 export const skillsRouter = Router();
 
-skillsRouter.use(apiKeyAuth);
+skillsRouter.use(authMiddleware);
 
 skillsRouter.get('/', async (req, res, next) => {
   try {
